@@ -1,15 +1,3 @@
-from flask import Flask, request, jsonify
-from tensorflow.keras.models import load_model
-from PIL import Image
-import numpy as np
-
-app = Flask(__name__)  # ← BU satır en üstte olacak, decorator'lardan önce
-
-model = None  # lazy load
-
-@app.route('/')
-def home():
-    return 'Socly API Çalışıyor!'
 @app.route('/predict', methods=['POST'])
 def predict():
     global model
@@ -24,20 +12,21 @@ def predict():
         file = request.files['file']
         print("⏳ Görsel alındı:", file.filename)
 
+        # Görseli işle
         img = Image.open(file.stream).convert('RGB')
         img = img.resize((224, 224))
         img_array = np.array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        prediction = model.predict(img_array)[0][0]
-
+        # Tahmin yap
+        prediction = float(model.predict(img_array)[0][0])  # float32 hatasına karşı
         label = "TEHLİKELİ (bahis içerikli)" if prediction >= 0.5 else "NORMAL (tehlikeli değil)"
-        confidence = round(float(prediction) * 100, 2) if prediction >= 0.5 else round((1 - prediction) * 100, 2)
+        confidence = prediction * 100 if prediction >= 0.5 else (1 - prediction) * 100
 
         return jsonify({
             'prediction': label,
-            'confidence_score': confidence,
-            'raw_score': round(float(prediction), 4)
+            'confidence_score': round(confidence, 2),
+            'raw_score': round(prediction, 4)
         })
 
     except Exception as e:
