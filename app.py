@@ -1,12 +1,11 @@
 from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
+from PIL import Image
 import numpy as np
-import os
+import io
 
 app = Flask(__name__)
 model = load_model('betting_detector_final.keras')
-os.makedirs('uploads', exist_ok=True)
 
 @app.route('/')
 def home():
@@ -19,12 +18,12 @@ def predict():
             return jsonify({'error': 'Görsel dosyası gerekli'}), 400
 
         file = request.files['file']
-        file_path = os.path.join('uploads', file.filename)
-        file.save(file_path)
 
-        img = image.load_img(file_path, target_size=(224, 224))
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        # Dosyayı diske yazmadan bellekte işle
+        img = Image.open(file.stream).convert('RGB')
+        img = img.resize((224, 224))
+        img_array = np.array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
 
         prediction = model.predict(img_array)[0][0]
         label = 'RİSKLİ HESAP' if prediction >= 0.5 else 'TEMİZ HESAP'
