@@ -1,3 +1,16 @@
+from flask import Flask, request, jsonify
+from tensorflow.keras.models import load_model
+from PIL import Image
+import numpy as np
+
+app = Flask(__name__)  # BU SATIR ŞART ‼️
+
+model = None  # Lazy load
+
+@app.route('/')
+def home():
+    return 'Socly API Çalışıyor!'
+
 @app.route('/predict', methods=['POST'])
 def predict():
     global model
@@ -19,7 +32,7 @@ def predict():
         img_array = np.expand_dims(img_array, axis=0)
 
         # Tahmin yap
-        prediction = float(model.predict(img_array)[0][0])  # float32 hatasına karşı
+        prediction = float(model.predict(img_array)[0][0])
         label = "TEHLİKELİ (bahis içerikli)" if prediction >= 0.5 else "NORMAL (tehlikeli değil)"
         confidence = prediction * 100 if prediction >= 0.5 else (1 - prediction) * 100
 
