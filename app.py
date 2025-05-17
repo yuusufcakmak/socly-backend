@@ -1,3 +1,16 @@
+from flask import Flask, request, jsonify
+from tensorflow.keras.models import load_model
+from PIL import Image
+import numpy as np
+
+app = Flask(__name__)  # ← BU satır en üstte olacak, decorator'lardan önce
+
+model = None  # lazy load
+
+@app.route('/')
+def home():
+    return 'Socly API Çalışıyor!'
+
 @app.route('/predict', methods=['POST'])
 def predict():
     global model
@@ -20,7 +33,7 @@ def predict():
         reconstructed = model.predict(img_array)
         reconstruction_error = np.mean(np.square(img_array - reconstructed))
 
-        threshold = 0.03  # Sabit eşik
+        threshold = 0.03  # senin belirlediğin eşik
 
         if reconstruction_error <= threshold:
             label = "TEHLİKELİ (bahis içerikli)"
