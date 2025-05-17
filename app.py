@@ -10,14 +10,13 @@ model = None  # lazy load
 @app.route('/')
 def home():
     return 'Socly API Çalışıyor!'
-
 @app.route('/predict', methods=['POST'])
 def predict():
     global model
     try:
         if model is None:
             print("📦 Model yükleniyor...")
-            model = load_model('betting_detector_final.keras', compile=False)
+            model = load_model('betting_detector_final.keras')  # classifier model
 
         if 'file' not in request.files:
             return jsonify({'error': 'Görsel dosyası gerekli'}), 400
@@ -30,22 +29,15 @@ def predict():
         img_array = np.array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
-        reconstructed = model.predict(img_array)
-        reconstruction_error = np.mean(np.square(img_array - reconstructed))
+        prediction = model.predict(img_array)[0][0]
 
-        threshold = 0.03  # senin belirlediğin eşik
-
-        if reconstruction_error <= threshold:
-            label = "TEHLİKELİ (bahis içerikli)"
-            confidence = (1 - reconstruction_error / threshold) * 100
-        else:
-            label = "NORMAL (tehlikeli değil)"
-            confidence = (reconstruction_error / threshold) * 100
+        label = "TEHLİKELİ (bahis içerikli)" if prediction >= 0.5 else "NORMAL (tehlikeli değil)"
+        confidence = round(float(prediction) * 100, 2) if prediction >= 0.5 else round((1 - prediction) * 100, 2)
 
         return jsonify({
             'prediction': label,
-            'confidence_score': round(float(confidence), 2),
-            'reconstruction_error': round(float(reconstruction_error), 6)
+            'confidence_score': confidence,
+            'raw_score': round(float(prediction), 4)
         })
 
     except Exception as e:
