@@ -6,6 +6,7 @@ import os
 
 app = Flask(__name__)
 model = load_model('betting_detector_final.keras')
+os.makedirs('uploads', exist_ok=True)
 
 @app.route('/')
 def home():
@@ -13,26 +14,27 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return jsonify({'error': 'Görsel dosyası gerekli'}), 400
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'Görsel dosyası gerekli'}), 400
 
-    file = request.files['file']
-    os.makedirs('uploads', exist_ok=True)  # Uploads klasörünü burada da garantiye al
-    file_path = os.path.join('uploads', file.filename)
-    file.save(file_path)
+        file = request.files['file']
+        file_path = os.path.join('uploads', file.filename)
+        file.save(file_path)
 
-    img = image.load_img(file_path, target_size=(224, 224))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0) / 255.0
+        img = image.load_img(file_path, target_size=(224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-    prediction = model.predict(img_array)[0][0]
-    label = 'RİSKLİ HESAP' if prediction >= 0.5 else 'TEMİZ HESAP'
+        prediction = model.predict(img_array)[0][0]
+        label = 'RİSKLİ HESAP' if prediction >= 0.5 else 'TEMİZ HESAP'
 
-    return jsonify({
-        'prediction': label,
-        'risk_score': round(float(prediction), 2)
-    })
+        return jsonify({
+            'prediction': label,
+            'risk_score': round(float(prediction), 2)
+        })
 
-if __name__ == '__main__':
-    os.makedirs('uploads', exist_ok=True)
-    app.run(debug=False, host='0.0.0.0', port=10000)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# NOT: app.run(...) yok
