@@ -11,12 +11,12 @@ from email import encoders
 import os
 from dotenv import load_dotenv
 
-load_dotenv() # .env dosyasındaki değişkenleri yükler
+load_dotenv() 
 
-app = Flask(__name__)  # BU SATIR ŞART ‼️
-CORS(app)  # Mobil ve web erişimi için şart
+app = Flask(__name__)  
+CORS(app)  #
 
-model = None  # Lazy load
+model = None 
 
 @app.route('/')
 def home():
@@ -28,7 +28,7 @@ def predict():
     try:
         if model is None:
             print("📦 Model yükleniyor...")
-            model = load_model('betting_detector_final.keras')  # Classifier model
+            model = load_model('betting_detector_final.keras')  
 
         if 'file' not in request.files:
             return jsonify({'error': 'Görsel dosyası gerekli'}), 400
@@ -69,9 +69,8 @@ def report_to_meta():
         analyzedUser = request.form.get('analyzedUser', 'Bilinmeyen Hesap')
         reporterUserId = request.form.get('reporterUserId', 'anonymous')
 
-        # E-posta Ayarları
-        sender_email = os.environ.get('SENDER_EMAIL') # Ortam değişkeninden al
-        sender_password = os.environ.get('SENDER_PASSWORD') # Ortam değişkeninden al
+        sender_email = os.environ.get('SENDER_EMAIL') 
+        sender_password = os.environ.get('SENDER_PASSWORD') 
         
         receiver_email = "yusuf.cakmak.2000@gmail.com"
 
@@ -86,32 +85,33 @@ def report_to_meta():
         msg['Subject'] = f"Şüpheli Hesap Bildirimi: {analyzedUser}"
 
         body = f"""
-        Merhaba Meta Destek Ekibi,
+       Merhaba Meta Destek Ekibi,
 
-        Aşağıdaki hesap, uygulamamız aracılığıyla bir kullanıcı tarafından şüpheli olarak bildirilmiştir:
+Günümüzde 7’den 70’e herkesi etkileyen dijital mecralarda, sanal kumar ve yasa dışı bahis içeriklerinin yaygınlaştığı gözlemlenmektedir. Özellikle sosyal medya platformları üzerinden yapılan bu tür paylaşımlar, bireylerin maddi ve manevi zararlar yaşamasına neden olmakta ve toplumsal düzeyde ciddi riskler oluşturmaktadır.
 
-        Analiz Edilen Hesap: {analyzedUser}
-        Risk Tahmini: {prediction}
-        Risk Skoru: {score}
-        Raporu Yapan Kullanıcı ID: {reporterUserId}
+Uygulamamız Socly, yapay zeka destekli analiz mekanizması sayesinde bu tür içerikleri tespit etmek ve ilgili platformlara bildirmek amacıyla geliştirilmiştir. Bu doğrultuda aşağıda bilgileri verilen hesap, bir kullanıcı tarafından şüpheli olarak işaretlenmiş ve sistemimiz tarafından riskli bulunmuştur:
 
-        Bu hesap, uygulamamız tarafından yapılan analiz sonucunda potansiyel olarak riskli bulunmuştur ve ekteki ekran görüntüsü ile birlikte incelenmesi için bildirilmektedir.
+- Analiz Edilen Hesap: {analyzedUser}  
+- Risk Tahmini: {prediction}  
+- Risk Skoru: {score}  
+- Raporlayan Kullanıcı ID: {reporterUserId}
 
-        Saygılarımızla,
-        Socly Uygulaması Destek Ekibi
+İlgili ekran görüntüsü ekte sunulmuş olup, incelenmek ve gerekli aksiyonların alınması amacıyla bilgilerinize arz olunur.
+
+Saygılarımızla,  
+**Socly Uygulaması Destek Ekibi**
+
         """
         msg.attach(MIMEText(body, 'plain'))
 
-        # Ekran Görüntüsü Ekleme
         part = MIMEBase('application', 'octet-stream')
         part.set_payload(screenshot.read())
         encoders.encode_base64(part)
         part.add_header('Content-Disposition', f"attachment; filename={screenshot.filename}")
         msg.attach(part)
 
-        # E-posta Gönderme
         try:
-            server = smtplib.SMTP('smtp.gmail.com', 587) # Örnek: Gmail SMTP sunucusu
+            server = smtplib.SMTP('smtp.gmail.com', 587) 
             server.starttls()
             server.login(sender_email, sender_password)
             text = msg.as_string()
