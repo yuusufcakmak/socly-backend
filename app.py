@@ -73,7 +73,7 @@ def report_to_meta():
         sender_email = os.environ.get('SENDER_EMAIL') # Ortam değişkeninden al
         sender_password = os.environ.get('SENDER_PASSWORD') # Ortam değişkeninden al
         
-        receiver_email = "abuse@meta.com"
+        receiver_email = "yusuf.cakmak.2000@gmail.com"
 
         if not sender_email or not sender_password:
             print("❌ HATA: Gönderici e-posta veya şifre ayarlanmamış.")
